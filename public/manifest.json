@@ -1,0 +1,21 @@
+{
+  "name": "Step Solar Field",
+  "short_name": "Step Solar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1578c8",
+  "theme_color": "#1578c8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/step-solar-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/step-solar-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
