@@ -8,6 +8,7 @@ import LeadList from './screens/LeadList';
 import LeadDetail from './screens/LeadDetail';
 import NewLead from './screens/NewLead';
 import StageUpdate from './screens/StageUpdate';
+import BackButtonHandler from './lib/useBackButton';
 
 function Guard({ children }) {
   const { user, ready } = useAuth();
@@ -59,9 +60,12 @@ function Shell() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/*" element={<Guard><Shell /></Guard>} />
-    </Routes>
+    <>
+      <BackButtonHandler />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/*" element={<Guard><Shell /></Guard>} />
+      </Routes>
+    </>
   );
 }

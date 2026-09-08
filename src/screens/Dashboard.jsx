@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { Icon } from '../lib/icons';
@@ -15,6 +15,12 @@ export default function Dashboard({ leads }) {
     () => leads.filter((l) => isToday(l.created_at || l.createdAt)).length,
     [leads],
   );
+
+  useEffect(() => {
+    const close = () => setMenu(false);
+    document.addEventListener('ss-close-overlays', close);
+    return () => document.removeEventListener('ss-close-overlays', close);
+  }, []);
 
   function openTile(key) {
     navigate(`/leads?tile=${encodeURIComponent(key)}`);
@@ -105,7 +111,7 @@ export default function Dashboard({ leads }) {
           <div className="menu-panel" onClick={(e) => e.stopPropagation()}>
             <strong>Signed in as</strong>
             <p style={{ color: '#64748b', fontSize: 13 }}>{user?.full_name} · {user?.role}</p>
-            <button type="button" onClick={() => { setMenu(false); navigate('/leads'); }}>All projects</button>
+            <button type="button" onClick={() => { setMenu(false); navigate('/leads?all=1'); }}>All projects</button>
             <button type="button" onClick={() => { setMenu(false); navigate('/leads/new'); }}>New lead</button>
             <button type="button" onClick={() => { logout(); navigate('/login'); }}>Sign out</button>
           </div>
