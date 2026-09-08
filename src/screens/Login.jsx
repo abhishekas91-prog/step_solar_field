@@ -58,6 +58,9 @@ export default function Login() {
         <button className="btn btn-primary btn-block" disabled={busy} type="submit">
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
+        <a className="apk-download" href="/step-solar-field.apk" download="step-solar-field.apk">
+          Download Android APK
+        </a>
       </form>
     </div>
   );

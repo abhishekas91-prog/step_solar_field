@@ -26,6 +26,10 @@ export default function Dashboard({ leads }) {
   }
 
   function openChip(chip) {
+    if (chip.id === 'all') {
+      navigate('/leads?all=1');
+      return;
+    }
     if (chip.id === 'today_surveys') {
       navigate('/leads?tile=site_survey_scheduled&today=1');
       return;

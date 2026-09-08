@@ -27,6 +27,7 @@ export const TILES = [
 ];
 
 export const QUICK_CHIPS = [
+  { id: 'all', label: 'All Projects' },
   { id: 'today_surveys', label: 'Today Site Surveys', stageKey: 'site_survey_scheduled' },
   { id: 'utility', label: 'Utility Visits', stageKey: 'net_metering_pending' },
   { id: 'followup', label: 'Visit Follow-Up', stageKey: 'survey_completed' },

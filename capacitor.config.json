@@ -1,0 +1,11 @@
+{
+  "appId": "in.stepsolar.field",
+  "appName": "Step Solar Field",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

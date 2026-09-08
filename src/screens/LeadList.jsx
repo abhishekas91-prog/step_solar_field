@@ -23,10 +23,13 @@ export default function LeadList({ leads }) {
   const tile = params.get('tile') || '';
   const q = params.get('q') || '';
   const todayOnly = params.get('today') === '1';
+  const allProjects = params.get('all') === '1';
 
-  const heading = tile || q || todayOnly
-    ? (TILES.find((x) => x.key === tile)?.label || (q ? `Search: ${q}` : 'Today New Leads'))
-    : `Namaste, ${user?.full_name || 'Team'}`;
+  const heading = allProjects
+    ? 'All Projects'
+    : (tile || q || todayOnly
+      ? (TILES.find((x) => x.key === tile)?.label || (q ? `Search: ${q}` : 'Today New Leads'))
+      : `Namaste, ${user?.full_name || 'Team'}`);
 
   const items = useMemo(() => {
     let list = leads;
@@ -44,7 +47,7 @@ export default function LeadList({ leads }) {
         </button>
         <div className="greet-copy">
           <BrandMark title={heading} />
-          {!tile && !q && !todayOnly && <small>{teamLabel(user?.role)}</small>}
+          {!tile && !q && !todayOnly && !allProjects && <small>{teamLabel(user?.role)}</small>}
         </div>
         <span style={{ width: 40 }} />
       </header>
