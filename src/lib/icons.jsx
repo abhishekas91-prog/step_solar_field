@@ -66,6 +66,15 @@ export function Icon({ name, size = 28, color = '#1e293b' }) {
           <path d="M18 24h12" stroke="#64748b" strokeWidth="2" />
         </svg>
       );
+    case 'grid':
+      return (
+        <svg style={s} viewBox="0 0 48 48" fill="none">
+          <rect x="8" y="8" width="14" height="14" rx="3" stroke="#334155" strokeWidth="2.2" fill="#dbeafe" />
+          <rect x="26" y="8" width="14" height="14" rx="3" stroke="#334155" strokeWidth="2.2" fill="#dcfce7" />
+          <rect x="8" y="26" width="14" height="14" rx="3" stroke="#334155" strokeWidth="2.2" fill="#fef3c7" />
+          <rect x="26" y="26" width="14" height="14" rx="3" stroke="#334155" strokeWidth="2.2" fill="#e2e8f0" />
+        </svg>
+      );
     case 'lost':
       return (
         <svg style={s} viewBox="0 0 48 48" fill="none">

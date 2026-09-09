@@ -1,36 +1,69 @@
 export const PIPELINE = [
-  { key: 'lead_captured', label: 'New Leads', owner: 'Sales', icon: 'search' },
-  { key: 'site_survey_scheduled', label: 'New Site Survey', owner: 'Sales', icon: 'clipboard' },
-  { key: 'survey_completed', label: 'Site Survey Pending', owner: 'Site Survey', icon: 'form' },
-  { key: 'quotation_sent', label: 'Site Survey Completed', owner: 'Sales', icon: 'checkform' },
-  { key: 'docs_verified', label: 'Estimation Requested', owner: 'Accounts', icon: 'hourglass' },
-  { key: 'discom_applied', label: 'Estimation Shared', owner: 'Accounts', icon: 'chart' },
-  { key: 'material_dispatched', label: 'Material Dispatched', owner: 'Installation', icon: 'box' },
-  { key: 'installation_in_progress', label: 'Installation', owner: 'Installation', icon: 'tools' },
-  { key: 'net_metering_pending', label: 'Utility Visits', owner: 'Installation', icon: 'plug' },
-  { key: 'commissioned', label: 'Deal', owner: 'Installation', icon: 'handshake' },
-  { key: 'subsidy_disbursed', label: 'Subsidy', owner: 'Accounts', icon: 'money' },
+  { key: 'reg', label: 'Consumer Registration', owner: 'Sales', icon: 'search' },
+  { key: 'app', label: 'Consumer Application', owner: 'Sales', icon: 'clipboard' },
+  { key: 'feas', label: 'Discom Feasibility', owner: 'Site Survey', icon: 'form' },
+  { key: 'vendor', label: 'Consumer Vendor Selection', owner: 'Sales', icon: 'checkform' },
+  { key: 'agreement', label: 'Vendor Upload Agreement', owner: 'Accounts', icon: 'hourglass' },
+  { key: 'install', label: 'Vendor Installation', owner: 'Installation', icon: 'tools' },
+  { key: 'inspection', label: 'Discom Inspection', owner: 'Installation', icon: 'plug' },
+  { key: 'commission', label: 'Project Commissioning', owner: 'Installation', icon: 'handshake' },
+  { key: 'subsidyreq', label: 'Consumer Subsidy Request', owner: 'Accounts', icon: 'chart' },
+  { key: 'subsidydisb', label: 'Subsidy Disbursal', owner: 'Accounts', icon: 'money' },
 ];
 
-export const PIPELINE_MAP = Object.fromEntries(PIPELINE.map((s) => [s.key, s]));
+export const SOLAR_PIPELINE = [
+  { key: 'lead_captured', label: 'Lead Captured', owner: 'Sales', icon: 'search' },
+  { key: 'site_survey_scheduled', label: 'Site Survey Scheduled', owner: 'Sales', icon: 'clipboard' },
+  { key: 'survey_completed', label: 'Site Survey Completed', owner: 'Site Survey', icon: 'form' },
+  { key: 'quotation_sent', label: 'Quotation Sent', owner: 'Sales', icon: 'checkform' },
+  { key: 'docs_verified', label: 'Documents Verified', owner: 'Accounts', icon: 'hourglass' },
+  { key: 'discom_applied', label: 'DISCOM Application', owner: 'Accounts', icon: 'chart' },
+  { key: 'material_dispatched', label: 'Material Dispatched', owner: 'Installation', icon: 'box' },
+  { key: 'installation_in_progress', label: 'Installation In Progress', owner: 'Installation', icon: 'tools' },
+  { key: 'net_metering_pending', label: 'Net Metering Pending', owner: 'Installation', icon: 'plug' },
+  { key: 'commissioned', label: 'Commissioned', owner: 'Installation', icon: 'handshake' },
+  { key: 'subsidy_disbursed', label: 'Subsidy Disbursed', owner: 'Accounts', icon: 'money' },
+];
+
+export const STAGE_ALIAS = {
+  lead_captured: 'reg',
+  site_survey_scheduled: 'app',
+  survey_completed: 'feas',
+  quotation_sent: 'vendor',
+  docs_verified: 'agreement',
+  discom_applied: 'feas',
+  material_dispatched: 'install',
+  installation_in_progress: 'install',
+  net_metering_pending: 'inspection',
+  commissioned: 'commission',
+  subsidy_disbursed: 'subsidydisb',
+};
+
+export const PIPELINE_MAP = Object.fromEntries(
+  [...PIPELINE, ...SOLAR_PIPELINE].map((s) => [s.key, s]),
+);
 export const STAGE_STATUS = ['Pending', 'In Progress', 'Completed'];
 
 export const TILES = [
-  { key: 'lead_captured', label: 'New Leads', icon: 'search' },
-  { key: 'site_survey_scheduled', label: 'New Site Survey', icon: 'clipboard' },
-  { key: 'survey_completed', label: 'Site Survey Pending', icon: 'form' },
-  { key: 'quotation_sent', label: 'Site Survey Completed', icon: 'checkform' },
-  { key: 'docs_verified', label: 'Estimation Requested', icon: 'hourglass' },
-  { key: 'discom_applied', label: 'Estimation Shared', icon: 'chart' },
-  { key: 'commissioned', label: 'Deal', icon: 'handshake' },
+  { key: 'all', label: 'All Projects', icon: 'grid' },
+  { key: 'reg', label: 'Registration', icon: 'search' },
+  { key: 'app', label: 'Application', icon: 'clipboard' },
+  { key: 'feas', label: 'Feasibility', icon: 'form' },
+  { key: 'vendor', label: 'Vendor Select', icon: 'checkform' },
+  { key: 'agreement', label: 'Agreement', icon: 'hourglass' },
+  { key: 'install', label: 'Installation', icon: 'tools' },
+  { key: 'inspection', label: 'Inspection', icon: 'plug' },
+  { key: 'commission', label: 'Commissioning', icon: 'handshake' },
+  { key: 'subsidyreq', label: 'Subsidy Request', icon: 'chart' },
+  { key: 'subsidydisb', label: 'Subsidy', icon: 'money' },
   { key: 'lost', label: 'Deal Lost', icon: 'lost' },
 ];
 
 export const QUICK_CHIPS = [
   { id: 'all', label: 'All Projects' },
-  { id: 'today_surveys', label: 'Today Site Surveys', stageKey: 'site_survey_scheduled' },
-  { id: 'utility', label: 'Utility Visits', stageKey: 'net_metering_pending' },
-  { id: 'followup', label: 'Visit Follow-Up', stageKey: 'survey_completed' },
+  { id: 'today_surveys', label: 'Today Site Surveys', stageKey: 'feas' },
+  { id: 'utility', label: 'Utility Visits', stageKey: 'inspection' },
+  { id: 'followup', label: 'Visit Follow-Up', stageKey: 'app' },
 ];
 
 export const PROPERTY_TYPES = ['Residential', 'Commercial / Office', 'Industrial / Factory', 'Agricultural / Pump'];
@@ -148,14 +181,26 @@ export function matchesQuery(lead, q) {
   return hay.includes(s);
 }
 
+export function canonicalStageKey(stageOrKey) {
+  const key = typeof stageOrKey === 'string' ? stageOrKey : stageOrKey?.key;
+  if (!key) return '';
+  return STAGE_ALIAS[key] || key;
+}
+
+export function currentStageKey(lead) {
+  return canonicalStageKey(currentStage(lead));
+}
+
 export function countByTile(leads, tileKey) {
+  if (tileKey === 'all') return leads.length;
   if (tileKey === 'lost') return leads.filter(isLost).length;
-  return leads.filter((l) => currentStage(l)?.key === tileKey && !isLost(l)).length;
+  return leads.filter((l) => currentStageKey(l) === tileKey && !isLost(l)).length;
 }
 
 export function filterByTile(leads, tileKey) {
+  if (tileKey === 'all') return leads;
   if (tileKey === 'lost') return leads.filter(isLost);
-  return leads.filter((l) => currentStage(l)?.key === tileKey && !isLost(l));
+  return leads.filter((l) => currentStageKey(l) === tileKey && !isLost(l));
 }
 
 export function formatWhen(iso) {

@@ -23,6 +23,10 @@ export default function Dashboard({ leads }) {
   }, []);
 
   function openTile(key) {
+    if (key === 'all') {
+      navigate('/leads?all=1');
+      return;
+    }
     navigate(`/leads?tile=${encodeURIComponent(key)}`);
   }
 
@@ -37,7 +41,7 @@ export default function Dashboard({ leads }) {
       return;
     }
     if (chip.id === 'today_surveys') {
-      navigate('/leads?tile=site_survey_scheduled&today=1');
+      navigate(`/leads?tile=${encodeURIComponent(chip.stageKey)}&today=1`);
       return;
     }
     navigate(`/leads?tile=${encodeURIComponent(chip.stageKey)}`);
