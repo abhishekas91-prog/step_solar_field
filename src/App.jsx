@@ -9,6 +9,7 @@ import LeadDetail from './screens/LeadDetail';
 import NewLead from './screens/NewLead';
 import StageUpdate from './screens/StageUpdate';
 import BackButtonHandler from './lib/useBackButton';
+import { requestLaunchPermissions } from './lib/permissions';
 
 function Guard({ children }) {
   const { user, ready } = useAuth();
@@ -59,6 +60,10 @@ function Shell() {
 }
 
 export default function App() {
+  useEffect(() => {
+    requestLaunchPermissions();
+  }, []);
+
   return (
     <>
       <BackButtonHandler />
