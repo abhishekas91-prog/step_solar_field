@@ -19,23 +19,29 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body, #root { height: 100%; }
+html, body, #root { height: 100%; max-width: 100%; overflow-x: hidden; }
+html { -webkit-text-size-adjust: 100%; }
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
 }
 button, input, select, textarea { font-family: inherit; }
 a { color: inherit; text-decoration: none; }
 
 .app-shell {
   min-height: 100%;
+  min-height: 100dvh;
   max-width: 480px;
+  width: 100%;
   margin: 0 auto;
   background: var(--bg);
   position: relative;
-  padding-bottom: 28px;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .topbar {
@@ -45,9 +51,9 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 12px;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: 0.2px;
 }
 .topbar-brand {
@@ -169,15 +175,15 @@ a { color: inherit; text-decoration: none; }
 .tile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 0 16px 80px;
+  gap: 10px;
+  padding: 0 12px 96px;
 }
 .tile {
   background: #fff;
   border: 0;
   border-radius: 8px;
-  min-height: 132px;
-  padding: 14px 10px 12px;
+  min-height: 118px;
+  padding: 12px 8px 10px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
@@ -211,10 +217,10 @@ a { color: inherit; text-decoration: none; }
 
 .fab {
   position: fixed;
-  right: max(18px, calc(50% - 240px + 18px));
-  bottom: 28px;
-  width: 58px;
-  height: 58px;
+  right: max(14px, calc(50% - 240px + 14px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   border: 0;
   background: var(--red);
@@ -227,11 +233,14 @@ a { color: inherit; text-decoration: none; }
 
 .login-page {
   min-height: 100%;
+  min-height: 100dvh;
   background: linear-gradient(180deg, var(--brand-blue) 0 42%, var(--bg) 42%);
   display: flex;
   flex-direction: column;
   max-width: 480px;
+  width: 100%;
   margin: 0 auto;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
 }
 .login-card {
   margin: 48px 20px 0;
@@ -400,7 +409,7 @@ a { color: inherit; text-decoration: none; }
 .greet-copy .topbar-brand span { font-size: 18px; font-weight: 800; }
 .greet-copy small { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; opacity: 0.9; }
 
-.proj-list { padding: 16px 14px 90px; display: flex; flex-direction: column; gap: 12px; }
+.proj-list { padding: 16px 14px 96px; display: flex; flex-direction: column; gap: 12px; }
 .proj-card {
   background: #fff;
   border: 0;
@@ -707,6 +716,17 @@ a { color: inherit; text-decoration: none; }
 .doc-line em { font-style: normal; font-weight: 700; }
 .pay-row { margin-top: 10px; }
 .docs-panel { margin-top: 4px; }
+
+@media (max-width: 380px) {
+  .profile-hero { padding: 16px 14px 20px; gap: 12px; }
+  .avatar-ring { width: 72px; height: 72px; }
+  .avatar-ring img { width: 64px; height: 64px; }
+  .profile-copy h2 { font-size: 17px; }
+  .tile { min-height: 108px; }
+  .tile span { font-size: 12px; }
+  .proj-card h3 { font-size: 17px; }
+  .login-logo { width: 132px; }
+}
 
 @media (min-width: 720px) {
   body { background: #cbd5e1; }

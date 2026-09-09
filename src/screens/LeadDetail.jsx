@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '../lib/icons';
 import BrandMark from '../components/BrandMark';
 import { useAuth } from '../lib/auth';
+import { goAppBack } from '../lib/useBackButton';
 import { api } from '../lib/api';
 import {
   canEditStage,
@@ -40,7 +41,7 @@ export default function LeadDetail({ leads, reload }) {
     return (
       <div className="app-shell teal">
         <header className="topbar teal-bar">
-          <button type="button" onClick={() => navigate(-1)}><Icon name="back" size={22} color="#fff" /></button>
+          <button type="button" onClick={() => goAppBack('/')}><Icon name="back" size={22} color="#fff" /></button>
           <BrandMark title="Project" />
           <span style={{ width: 40 }} />
         </header>
@@ -53,7 +54,7 @@ export default function LeadDetail({ leads, reload }) {
     return (
       <div className="app-shell teal">
         <header className="topbar teal-bar">
-          <button type="button" onClick={() => navigate(-1)}><Icon name="back" size={22} color="#fff" /></button>
+          <button type="button" onClick={() => goAppBack('/')}><Icon name="back" size={22} color="#fff" /></button>
           <BrandMark title="Loading…" />
           <span style={{ width: 40 }} />
         </header>
@@ -67,7 +68,7 @@ export default function LeadDetail({ leads, reload }) {
   return (
     <div className="app-shell teal">
       <header className="topbar teal-bar">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" onClick={() => goAppBack('/')} aria-label="Back">
           <Icon name="back" size={22} color="#fff" />
         </button>
         <BrandMark title={lead.code || 'Project'} />

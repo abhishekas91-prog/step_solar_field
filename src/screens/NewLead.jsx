@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../lib/icons';
 import BrandMark from '../components/BrandMark';
 import { api } from '../lib/api';
+import { goAppBack } from '../lib/useBackButton';
 import { compressImage, captureGps } from '../lib/photo';
 import { CITIES, PROPERTY_TYPES, ROOF_TYPES, STATES, TIMELINES } from '../lib/pipeline';
 
@@ -139,7 +140,7 @@ export default function NewLead({ reload }) {
   return (
     <div className="app-shell teal">
       <header className="topbar teal-bar">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" onClick={() => goAppBack('/')} aria-label="Back">
           <Icon name="back" size={22} color="#fff" />
         </button>
         <BrandMark title="New Lead" />

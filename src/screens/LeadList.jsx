@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '../lib/icons';
 import BrandMark from '../components/BrandMark';
 import { useAuth } from '../lib/auth';
+import { goAppBack } from '../lib/useBackButton';
 import {
   TILES,
   currentStage,
@@ -42,7 +43,7 @@ export default function LeadList({ leads }) {
   return (
     <div className="app-shell teal">
       <header className="topbar teal-bar greet">
-        <button type="button" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} aria-label="Back">
+        <button type="button" onClick={() => goAppBack('/')} aria-label="Back">
           <Icon name="back" size={22} color="#fff" />
         </button>
         <div className="greet-copy">
