@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { closePdfOverlay, isPdfOverlayOpen } from './pdf';
 
 const ROOTS = new Set(['/', '/login']);
 
@@ -14,6 +15,10 @@ function isRoot(loc) {
 }
 
 function closeOverlays() {
+  if (isPdfOverlayOpen()) {
+    closePdfOverlay();
+    return true;
+  }
   if (!document.querySelector('.menu-sheet')) return false;
   document.dispatchEvent(new Event('ss-close-overlays'));
   return true;

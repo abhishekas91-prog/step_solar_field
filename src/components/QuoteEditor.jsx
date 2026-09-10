@@ -13,6 +13,7 @@ import {
   printRecord,
   quotationRecord,
 } from '../lib/documents';
+import { sendDocWhatsApp } from '../lib/pdf';
 
 function blankItem(gst = 5) {
   return { desc: '', hsn: '', qty: 1, unit: 'Nos', price: 0, gst };
@@ -166,13 +167,13 @@ export default function QuoteEditor({ lead, user, onSaved, locked, fixedKind }) 
     }
   }
 
-  function downloadPdf() {
-    const rec = quotationRecord({
+  function quoteRec() {
+    return quotationRecord({
       ...mapped,
       quotation: {
         ...(q || {}),
         kind,
-        items,
+        items: items.length ? items : (q?.items || []),
         custAddress,
         subsidyCentral,
         subsidyState,
@@ -191,8 +192,44 @@ export default function QuoteEditor({ lead, user, onSaved, locked, fixedKind }) 
         payInstall,
       },
     });
-    const okPrint = printRecord(rec);
-    if (!okPrint) setError('PDF window block ho gayi — popup allow karein');
+  }
+
+  function downloadPdf() {
+    printRecord(quoteRec(), {
+      lead,
+      docType: kind === 'commercial' ? 'commercial' : 'quotation',
+      onStatus: (msg, isErr) => {
+        if (!msg) return;
+        if (isErr) setError(msg);
+        else setOk(msg);
+      },
+    });
+  }
+
+  async function sendWa() {
+    setError('');
+    setOk('WhatsApp se bhej rahe hain…');
+    try {
+      const rec = quoteRec();
+      const out = await sendDocWhatsApp(lead, {
+        docType: kind === 'commercial' ? 'commercial' : 'quotation',
+        docNo: rec.docNo,
+      });
+      if (out?.ok === false && out?.error === 'whatsapp_disabled') {
+        setOk('');
+        setError('WhatsApp Business API CRM mein configure nahi hai');
+        return;
+      }
+      if (out?.ok === false) {
+        setOk('');
+        setError(out?.error || 'WhatsApp send fail');
+        return;
+      }
+      setOk('WhatsApp Business API se bhej diya');
+    } catch (e) {
+      setOk('');
+      setError(e.message || 'WhatsApp send fail');
+    }
   }
 
   async function markStatus(status) {
@@ -229,8 +266,11 @@ export default function QuoteEditor({ lead, user, onSaved, locked, fixedKind }) 
             <span>{inr(q.netPayable ?? q.grandTotal)}</span>
           </div>
           <p>{(q.items || []).length} items · rev. {q.revision || 1}</p>
+          {error && <div className="err">{error}</div>}
+          {ok && <div className="ok">{ok}</div>}
           <div className="quote-actions">
             <button type="button" className="mini primary" onClick={downloadPdf}>PDF Download</button>
+            <button type="button" className="mini wa" onClick={sendWa}>Send by WhatsApp</button>
             {allowed && !locked && (
               <button type="button" className="mini" onClick={() => setOpen(true)}>Edit Items</button>
             )}
@@ -371,7 +411,8 @@ export default function QuoteEditor({ lead, user, onSaved, locked, fixedKind }) 
 
           <div className="quote-actions">
             {q && <button type="button" className="mini" onClick={() => setOpen(false)}>Cancel</button>}
-            <button type="button" className="mini" onClick={downloadPdf}>PDF Preview</button>
+            <button type="button" className="mini" onClick={downloadPdf}>PDF Download</button>
+            <button type="button" className="mini wa" onClick={sendWa}>Send by WhatsApp</button>
             {allowed && (
               <button type="button" className="mini primary" disabled={busy} onClick={save}>
                 {busy ? 'Saving…' : 'Save Quotation'}

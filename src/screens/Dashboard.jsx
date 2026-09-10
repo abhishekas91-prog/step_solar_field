@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth';
 import { Icon } from '../lib/icons';
 import BrandMark from '../components/BrandMark';
 import { TILES, QUICK_CHIPS, countByTile, isToday } from '../lib/pipeline';
+import { requestLaunchPermissions } from '../lib/permissions';
 
 export default function Dashboard({ leads }) {
   const { user, logout } = useAuth();
@@ -19,6 +20,7 @@ export default function Dashboard({ leads }) {
   useEffect(() => {
     const close = () => setMenu(false);
     document.addEventListener('ss-close-overlays', close);
+    requestLaunchPermissions();
     return () => document.removeEventListener('ss-close-overlays', close);
   }, []);
 

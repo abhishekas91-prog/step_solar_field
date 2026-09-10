@@ -13,6 +13,12 @@ async function requestNative() {
   } catch {
     /* plugin optional */
   }
+  try {
+    const { Filesystem } = await import('@capacitor/filesystem');
+    await Filesystem.requestPermissions();
+  } catch {
+    /* plugin optional */
+  }
 }
 
 async function requestWeb() {

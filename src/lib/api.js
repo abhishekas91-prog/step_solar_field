@@ -102,6 +102,8 @@ export const api = {
   },
   docPath: (id, stageKey, docId) =>
     `/crm/leads/${id}/stages/${stageKey}/documents/${docId}`,
+  sendWhatsAppDoc: (id, data) =>
+    request(`/crm/leads/${id}/whatsapp/document`, { method: 'POST', body: data }),
 };
 
 export async function fetchDocObjectUrl(leadId, stageKey, docId) {

@@ -8,6 +8,7 @@ import {
   printRecord,
   receiptRecord,
 } from '../lib/documents';
+import { sendDocWhatsApp } from '../lib/pdf';
 import QuoteEditor from './QuoteEditor';
 
 const TABS = [
@@ -37,19 +38,49 @@ export default function DocsPanel({ lead, user, onSaved }) {
     setOk(isErr ? '' : msg);
   }
 
-  function downloadInvoice() {
+  function invoiceRec() {
     const mapped = fieldLeadForDocs(lead);
-    const rec = invoiceRecord({
+    return invoiceRecord({
       ...mapped,
       invoice: { ...(inv || {}), payMode: invPayMode, supplyType: invSupplyType },
       quotation: { ...(q || {}), payMode: invPayMode, supplyType: invSupplyType },
     });
-    if (!printRecord(rec)) flash('PDF window block ho gayi — popup allow karein', true);
+  }
+
+  function openPdf(rec, docType) {
+    printRecord(rec, {
+      lead,
+      docType,
+      onStatus: (msg, isErr) => {
+        if (msg) flash(msg, isErr);
+      },
+    });
+  }
+
+  function downloadInvoice() {
+    openPdf(invoiceRec(), 'invoice');
   }
 
   function downloadReceipt(payment) {
-    const rec = receiptRecord(fieldLeadForDocs(lead), payment);
-    if (!printRecord(rec)) flash('PDF window block ho gayi — popup allow karein', true);
+    openPdf(receiptRecord(fieldLeadForDocs(lead), payment), 'receipt');
+  }
+
+  async function sendWa(docType, rec) {
+    flash('WhatsApp se bhej rahe hain…');
+    try {
+      const out = await sendDocWhatsApp(lead, { docType, docNo: rec?.docNo });
+      if (out?.ok === false && out?.error === 'whatsapp_disabled') {
+        flash('WhatsApp Business API CRM mein configure nahi hai', true);
+        return;
+      }
+      if (out?.ok === false) {
+        flash(out?.error || 'WhatsApp send fail', true);
+        return;
+      }
+      flash('WhatsApp Business API se bhej diya');
+    } catch (e) {
+      flash(e.message || 'WhatsApp send fail', true);
+    }
   }
 
   async function generateInvoice() {
@@ -211,6 +242,7 @@ export default function DocsPanel({ lead, user, onSaved }) {
               )}
               <div className="quote-actions">
                 <button type="button" className="mini primary" onClick={downloadInvoice}>PDF Download</button>
+                <button type="button" className="mini wa" onClick={() => sendWa('invoice', invoiceRec())}>Send by WhatsApp</button>
               </div>
             </div>
           )}
@@ -291,6 +323,13 @@ export default function DocsPanel({ lead, user, onSaved }) {
                   <div className="quote-actions">
                     <button type="button" className="mini primary" onClick={() => downloadReceipt(p)}>
                       PDF Receipt
+                    </button>
+                    <button
+                      type="button"
+                      className="mini wa"
+                      onClick={() => sendWa('receipt', receiptRecord(fieldLeadForDocs(lead), p))}
+                    >
+                      Send by WhatsApp
                     </button>
                   </div>
                 </div>

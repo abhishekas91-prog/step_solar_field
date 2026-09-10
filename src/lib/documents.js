@@ -738,39 +738,20 @@ export function wrapPrintHtml(inner) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Step Solar Document</title><style>${DOC_PRINT_CSS}</style></head><body><div class="docwrap"><div class="doc2">${inner}</div></div></body></html>`;
 }
 
-function fitDocToOnePage(docWin) {
-  const doc = docWin.document.querySelector('.doc2');
-  if (!doc) return;
-  const mm = 96 / 25.4;
-  const pageH = 297 * mm - 16 * mm;
-  const h = doc.scrollHeight;
-  if (h > pageH) {
-    const s = pageH / h;
-    doc.style.transform = `scale(${s})`;
-    doc.style.transformOrigin = 'top left';
-    doc.style.width = `${100 / s}%`;
-  }
-}
-
-export function printRecord(record) {
-  const w = window.open('', '_blank');
-  if (!w) return false;
-  const write = () => {
+export function printRecord(record, extra = {}) {
+  const run = async () => {
+    await loadLogoDataUri();
     const { html } = renderDocHtml(record);
-    w.document.open();
-    w.document.write(wrapPrintHtml(html));
-    w.document.close();
-    const go = () => {
-      fitDocToOnePage(w);
-      w.focus();
-      try { w.print(); } catch (e) { /* ignore */ }
-    };
-    setTimeout(go, 120);
+    const { presentPdf, pdfFilename } = await import('./pdf');
+    presentPdf({
+      html,
+      filename: extra.filename || pdfFilename(record),
+      lead: extra.lead,
+      docType: extra.docType || record.mode,
+      docNo: extra.docNo || record.docNo,
+      onStatus: extra.onStatus,
+    });
   };
-  if (logoDataUri) {
-    write();
-    return true;
-  }
-  loadLogoDataUri().then(write);
+  run().catch(() => {});
   return true;
 }
