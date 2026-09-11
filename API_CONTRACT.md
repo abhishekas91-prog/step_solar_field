@@ -27,6 +27,8 @@ Base URL: `https://stepsolar-backend.onrender.com/api`
 | `PATCH /crm/leads/{id}` | Stage status/notes/location update | body `{stages: [...]}` — **must send the full stages array**, only the target stage's fields changed, same order/keys as received. Role-based: non-Admin can only change stages where `stage.owner === my role`. |
 | `POST /crm/leads/{id}/comments` | Field comment | body `{text}` |
 | `POST /crm/leads/{id}/stages/{stage_key}/documents` | Proof photo upload | multipart `file` field. |
+| `GET /crm/whatsapp/chat?phone=` | In-app WhatsApp history | Same WaCRM proxy as CRM web. Returns `{messages, contact, conversation_id}`. |
+| `POST /crm/whatsapp/chat` | Send WhatsApp text | body `{phone, text}` via WaCRM Business API (not personal `wa.me`). |
 
 ## Fields this app adds to the stage object
 

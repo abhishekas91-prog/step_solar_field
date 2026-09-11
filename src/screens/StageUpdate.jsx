@@ -13,6 +13,7 @@ import {
   stageLabel,
 } from '../lib/pipeline';
 import QuoteEditor from '../components/QuoteEditor';
+import { WhatsAppFab } from '../components/WhatsAppChat';
 
 export default function StageUpdate({ leads, reload }) {
   const { id, stageKey } = useParams();
@@ -302,6 +303,7 @@ export default function StageUpdate({ leads, reload }) {
           {busy === 'save' ? 'Saving…' : 'Update Submit Karein'}
         </button>
       </div>
+      <WhatsAppFab lead={lead} />
     </div>
   );
 }

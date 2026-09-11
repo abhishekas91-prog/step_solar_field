@@ -12,6 +12,7 @@ import {
   statusTone,
 } from '../lib/pipeline';
 import DocsPanel from '../components/DocsPanel';
+import { WhatsAppFab } from '../components/WhatsAppChat';
 
 export default function LeadDetail({ leads, reload }) {
   const { id } = useParams();
@@ -146,6 +147,7 @@ export default function LeadDetail({ leads, reload }) {
           />
         )}
       </div>
+      <WhatsAppFab lead={lead} />
     </div>
   );
 }

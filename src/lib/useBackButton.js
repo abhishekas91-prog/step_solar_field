@@ -19,7 +19,7 @@ function closeOverlays() {
     closePdfOverlay();
     return true;
   }
-  if (!document.querySelector('.menu-sheet')) return false;
+  if (!document.querySelector('.menu-sheet') && !document.querySelector('.wa-sheet')) return false;
   document.dispatchEvent(new Event('ss-close-overlays'));
   return true;
 }
