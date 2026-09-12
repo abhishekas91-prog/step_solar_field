@@ -507,8 +507,9 @@ a { color: inherit; text-decoration: none; }
   padding: 8px 10px 6px;
   box-shadow: 0 1px 1px rgba(15, 23, 42, 0.08);
 }
-.wa-bubble p { font-size: 14px; line-height: 1.35; white-space: pre-wrap; word-break: break-word; }
+.wa-bubble p { font-size: 14px; line-height: 1.35; white-space: pre-wrap; word-break: break-word; color: #111b21; }
 .wa-bubble span { display: block; text-align: right; font-size: 10px; color: #64748b; margin-top: 4px; }
+.wa-media { display: block; max-width: 100%; border-radius: 6px; margin-bottom: 6px; }
 .wa-bubble.out { margin-left: auto; background: #dcf8c6; }
 .wa-bubble.in { margin-right: auto; background: #fff; }
 .wa-err { background: #fee2e2; color: #991b1b; font-size: 12px; font-weight: 700; padding: 8px 12px; }
