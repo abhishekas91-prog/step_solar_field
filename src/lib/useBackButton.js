@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { closePdfOverlay, isPdfOverlayOpen } from './pdf';
+import { closeChatOverlay, isChatOverlayOpen } from '../components/WhatsAppChat';
 
 const ROOTS = new Set(['/', '/login']);
 
@@ -19,7 +20,11 @@ function closeOverlays() {
     closePdfOverlay();
     return true;
   }
-  if (!document.querySelector('.menu-sheet') && !document.querySelector('.wa-sheet')) return false;
+  if (isChatOverlayOpen()) {
+    closeChatOverlay();
+    return true;
+  }
+  if (!document.querySelector('.menu-sheet')) return false;
   document.dispatchEvent(new Event('ss-close-overlays'));
   return true;
 }

@@ -104,9 +104,9 @@ export const api = {
     `/crm/leads/${id}/stages/${stageKey}/documents/${docId}`,
   sendWhatsAppDoc: (id, data) =>
     request(`/crm/leads/${id}/whatsapp/document`, { method: 'POST', body: data }),
-  whatsappChat: (phone) =>
+  whatsappThread: (phone) =>
     request(`/crm/whatsapp/chat?phone=${encodeURIComponent(phone)}`),
-  whatsappChatSend: (data) =>
+  whatsappChat: (data) =>
     request('/crm/whatsapp/chat', { method: 'POST', body: data }),
 };
 
