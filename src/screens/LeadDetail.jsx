@@ -12,6 +12,7 @@ import {
   statusTone,
 } from '../lib/pipeline';
 import DocsPanel from '../components/DocsPanel';
+import WhatsAppChat from '../components/WhatsAppChat';
 
 export default function LeadDetail({ leads, reload }) {
   const { id } = useParams();
@@ -21,6 +22,7 @@ export default function LeadDetail({ leads, reload }) {
   const [lead, setLead] = useState(cached || null);
   const [error, setError] = useState('');
   const [tab, setTab] = useState('pipeline');
+  const [waOpen, setWaOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +148,12 @@ export default function LeadDetail({ leads, reload }) {
           />
         )}
       </div>
+      {phone ? (
+        <button className="fab wa-fab" type="button" onClick={() => setWaOpen(true)} aria-label="WhatsApp">
+          <Icon name="wa" size={28} />
+        </button>
+      ) : null}
+      <WhatsAppChat lead={lead} open={waOpen} onClose={() => setWaOpen(false)} />
     </div>
   );
 }

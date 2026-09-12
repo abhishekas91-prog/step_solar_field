@@ -104,6 +104,10 @@ export const api = {
     `/crm/leads/${id}/stages/${stageKey}/documents/${docId}`,
   sendWhatsAppDoc: (id, data) =>
     request(`/crm/leads/${id}/whatsapp/document`, { method: 'POST', body: data }),
+  whatsappThread: (phone) =>
+    request(`/crm/whatsapp/chat?phone=${encodeURIComponent(phone)}`),
+  whatsappChat: (data) =>
+    request('/crm/whatsapp/chat', { method: 'POST', body: data }),
 };
 
 export async function fetchDocObjectUrl(leadId, stageKey, docId) {

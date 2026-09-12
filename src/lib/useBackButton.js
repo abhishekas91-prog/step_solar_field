@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { closePdfOverlay, isPdfOverlayOpen } from './pdf';
+import { closeChatOverlay, isChatOverlayOpen } from '../components/WhatsAppChat';
 
 const ROOTS = new Set(['/', '/login']);
 
@@ -17,6 +18,10 @@ function isRoot(loc) {
 function closeOverlays() {
   if (isPdfOverlayOpen()) {
     closePdfOverlay();
+    return true;
+  }
+  if (isChatOverlayOpen()) {
+    closeChatOverlay();
     return true;
   }
   if (!document.querySelector('.menu-sheet')) return false;
