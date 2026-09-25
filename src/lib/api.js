@@ -51,18 +51,20 @@ async function request(path, { method = 'GET', body, formData } = {}) {
     throw Object.assign(new Error('Session expired — please sign in again.'), { status: 401 });
   }
 
-  if (!res.ok) {
-    let msg = `Request failed (${res.status})`;
-    try {
-      const j = await res.json();
-      if (typeof j.detail === 'string') msg = j.detail;
-      else if (Array.isArray(j.detail)) msg = j.detail.map((d) => d.msg || d).join('; ');
-      else if (j.message) msg = j.message;
-    } catch {
-      /* keep default */
+    if (!res.ok) {
+      let msg = res.status === 429
+        ? 'Too Many Requests'
+        : `Request failed (${res.status})`;
+      try {
+        const j = await res.json();
+        if (typeof j.detail === 'string') msg = j.detail;
+        else if (Array.isArray(j.detail)) msg = j.detail.map((d) => d.msg || d).join('; ');
+        else if (j.message) msg = j.message;
+      } catch {
+        /* keep default */
+      }
+      throw Object.assign(new Error(msg), { status: res.status });
     }
-    throw Object.assign(new Error(msg), { status: res.status });
-  }
 
   if (res.status === 204) return null;
   const ct = res.headers.get('content-type') || '';
@@ -105,7 +107,7 @@ export const api = {
   sendWhatsAppDoc: (id, data) =>
     request(`/crm/leads/${id}/whatsapp/document`, { method: 'POST', body: data }),
   whatsappThread: (phone) =>
-    request(`/crm/whatsapp/chat?phone=${encodeURIComponent(phone)}`),
+    request(`/crm/whatsapp/chat?phone=${encodeURIComponent(String(phone || '').replace(/\D/g, '') || phone)}`),
   whatsappChat: (data) =>
     request('/crm/whatsapp/chat', { method: 'POST', body: data }),
 };
