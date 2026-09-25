@@ -13,50 +13,97 @@ export function closeChatOverlay() {
   overlayCloser?.();
 }
 
-const TEXT_META = new Set([
-  'id', 'direction', 'status', 'state', 'created_at', 'createdAt', 'updated_at',
-  'timestamp', 'media_url', 'content_type', 'phone', 'from', 'to', 'sender',
-  'sender_type', 'conversation_id', 'contact_id', 'message_id', 'wamid',
-  'type', 'msg_type', 'message_type', 'at',
+const SKIP_KEYS = new Set([
+  'id', 'uuid', 'gid', 'direction', 'status', 'state', 'ack', 'created_at', 'createdAt',
+  'updated_at', 'updatedAt', 'timestamp', 'time', 'date', 'sent_at', 'received_at',
+  'media_url', 'content_type', 'mime_type', 'phone', 'from', 'to', 'sender', 'sender_type',
+  'conversation_id', 'contact_id', 'message_id', 'wamid', 'wa_id', 'type', 'msg_type',
+  'message_type', 'at', 'ok', 'enabled', 'error', 'role', 'from_me', 'is_from_me',
+  'outgoing', 'incoming', 'sent', 'read', 'delivered',
 ]);
 
-function asText(value) {
-  if (value == null) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-  if (typeof value !== 'object') return '';
-  const nested = value.content_text || value.contentText || value.body || value.text
-    || value.message || value.caption || value.content || value.msg;
-  if (!nested || nested === value) return '';
-  return asText(nested);
+const SKIP_TEXT = /^(delivered|read|sent|pending|failed|inbound|outbound|incoming|outgoing|customer|agent|business|bot|user|contact|text|image|video|audio|document|chat|message|media|file|sticker|ok|true|false)$/i;
+
+function digitsPhone(phone) {
+  return String(phone || '').replace(/\D/g, '');
 }
 
-function deepText(obj, depth = 0) {
-  if (depth > 4 || !obj || typeof obj !== 'object') return '';
-  for (const [k, v] of Object.entries(obj)) {
-    if (TEXT_META.has(k)) continue;
-    if (typeof v === 'string' && v.trim()) return v;
-    const nested = deepText(v, depth + 1);
-    if (nested) return nested;
+function parseMaybeJson(value) {
+  if (typeof value !== 'string') return value;
+  const t = value.trim();
+  if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
+    try { return JSON.parse(t); } catch { return value; }
   }
-  return '';
+  return value;
+}
+
+function isBoringText(s) {
+  const t = String(s || '').trim();
+  if (!t || t.length > 4000) return true;
+  if (SKIP_TEXT.test(t)) return true;
+  if (/^https?:\/\//i.test(t) && t.length < 120) return true;
+  if (/^\d+$/.test(t)) return true;
+  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return true;
+  if (/^wamid\./i.test(t)) return true;
+  if (/^[0-9a-f-]{8,}$/i.test(t) && t.length <= 64) return true;
+  return false;
+}
+
+function collectTexts(node, depth, found) {
+  if (depth > 7 || node == null) return;
+  if (typeof node === 'string') {
+    const parsed = parseMaybeJson(node);
+    if (parsed !== node) {
+      collectTexts(parsed, depth + 1, found);
+      return;
+    }
+    if (!isBoringText(node)) found.push(node.trim());
+    return;
+  }
+  if (typeof node === 'number' || typeof node === 'boolean') return;
+  if (Array.isArray(node)) {
+    node.forEach((item) => collectTexts(item, depth + 1, found));
+    return;
+  }
+  if (typeof node !== 'object') return;
+  const preferred = [];
+  const rest = [];
+  for (const [k, v] of Object.entries(node)) {
+    if (SKIP_KEYS.has(k) || k.startsWith('_')) continue;
+    if (/text|body|content|caption|msg|title|comment|conversation|description|payload/i.test(k)) {
+      preferred.push(v);
+    } else {
+      rest.push(v);
+    }
+  }
+  preferred.forEach((v) => collectTexts(v, depth + 1, found));
+  rest.forEach((v) => collectTexts(v, depth + 1, found));
 }
 
 function pickText(m) {
+  if (typeof m === 'string') return isBoringText(m) ? '' : m.trim();
   if (!m || typeof m !== 'object') return '';
   const direct = [
-    m.content_text, m.contentText, m.text, m.body, m.message, m.content, m.caption, m.msg,
+    m.content_text, m.contentText, m.processed_message_content, m.message_content,
+    m.display_text, m.plain_text, m.rendered_content, m.conversation,
+    m.text?.body, m.body?.text, m.text, m.body, m.message, m.content, m.caption, m.msg,
     m.message_text, m.messageText, m.message_body, m.text_body, m.wamessage,
-    m.payload, m.data, m.interactive?.body, m.button?.text,
-    m.button_reply?.title, m.list_reply?.title, m.template?.name,
-    m.image?.caption, m.video?.caption, m.document?.caption,
-    m.image?.link, m.document?.filename, m.filename,
+    m.interactive?.body?.text, m.interactive?.body, m.button?.text,
+    m.button_reply?.title, m.list_reply?.title,
+    m.image?.caption, m.video?.caption, m.document?.caption, m.document?.filename,
+    m.extendedTextMessage?.text, m.conversation,
   ];
   for (const value of direct) {
-    const out = asText(value).trim();
-    if (out) return asText(value);
+    if (typeof value === 'string' && !isBoringText(value)) return value.trim();
+    if (value && typeof value === 'object') {
+      const nested = pickText(value);
+      if (nested) return nested;
+    }
   }
-  return deepText(m);
+  const found = [];
+  collectTexts(m, 0, found);
+  found.sort((a, b) => b.length - a.length);
+  return found[0] || '';
 }
 
 function pickWhen(m) {
@@ -104,35 +151,124 @@ function isMediaMessage(m, mediaUrl) {
   return ['image', 'video', 'audio', 'document', 'sticker', 'file', 'media'].includes(t);
 }
 
+function unwrapMessage(m) {
+  if (typeof m === 'string') {
+    const t = m.trim();
+    if (t.startsWith('{') || t.startsWith('[')) {
+      try { return unwrapMessage(JSON.parse(t)); } catch { return m; }
+    }
+    return m;
+  }
+  if (!m || typeof m !== 'object') return m;
+  if (m.message && typeof m.message === 'object' && !Array.isArray(m.message) && !m.content_text && !m.text && !m.body) {
+    return { ...m.message, ...m, message: m.message };
+  }
+  return m;
+}
+
 function normalizeMessage(m, index) {
   if (typeof m === 'string') {
     return { id: `msg-${index}`, direction: 'outbound', text: m, media_url: '', status: '', created_at: '' };
   }
-  const raw = m && typeof m === 'object' ? m : {};
-  const media_url = pickMedia(raw);
-  const text = pickText(raw) || (isMediaMessage(raw, media_url) ? 'Attachment' : '');
+  const raw = unwrapMessage(m && typeof m === 'object' ? m : {});
+  const obj = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const media_url = pickMedia(obj);
+  const text = pickText(obj) || (isMediaMessage(obj, media_url) ? 'Attachment' : '');
   return {
-    id: raw.id ?? raw.message_id ?? raw.wamid ?? `msg-${index}-${pickWhen(raw) || index}`,
-    direction: pickDirection(raw),
+    id: String(obj.id ?? obj.message_id ?? obj.wamid ?? `msg-${index}-${pickWhen(obj) || index}`),
+    direction: pickDirection(obj),
     text,
     media_url,
-    status: raw.status || raw.state || '',
-    created_at: pickWhen(raw),
+    status: obj.status || obj.state || '',
+    created_at: pickWhen(obj),
   };
 }
 
-function extractMessageList(out) {
-  if (Array.isArray(out)) return out;
-  if (!out || typeof out !== 'object') return [];
-  const nested = out.messages ?? out.data?.messages ?? out.thread ?? out.conversation?.messages
-    ?? out.chats ?? out.data;
-  if (Array.isArray(nested)) return nested;
-  if (nested && typeof nested === 'object') {
-    if (Array.isArray(nested.data)) return nested.data;
-    if (Array.isArray(nested.messages)) return nested.messages;
-    if (Array.isArray(nested.items)) return nested.items;
+function chatPhone(phone) {
+  const d = digitsPhone(phone);
+  if (d.length === 11 && d.startsWith('0')) return d.slice(1);
+  if (d.length === 12 && d.startsWith('91')) return d.slice(2);
+  if (d.length > 12 && d.startsWith('91')) return d.slice(-10);
+  return d;
+}
+
+function scoreMessageArray(list) {
+  if (!Array.isArray(list) || !list.length) return -1;
+  let score = 0;
+  let withText = 0;
+  for (const item of list) {
+    if (typeof item === 'string' && item.trim()) {
+      withText += 1;
+      score += 6;
+      continue;
+    }
+    if (!item || typeof item !== 'object') continue;
+    score += 1;
+    if (pickText(item) || pickMedia(item)) {
+      withText += 1;
+      score += 8;
+    }
+    if (item.content_text || item.contentText || item.content || item.text || item.body || item.message) {
+      score += 3;
+    }
+    const kind = String(item.type || item.message_type || item.msg_type || '').toLowerCase();
+    if (['status', 'ack', 'receipt', 'activity', 'event'].includes(kind)) score -= 4;
   }
-  return [];
+  if (!withText) return score - 20;
+  return score + withText * 4;
+}
+
+function extractMessageList(out) {
+  const candidates = [];
+  function consider(list) {
+    if (!Array.isArray(list) || !list.length) return;
+    if (candidates.includes(list)) return;
+    candidates.push(list);
+  }
+  function walk(node, depth) {
+    if (depth > 6 || node == null) return;
+    if (typeof node === 'string') {
+      const t = node.trim();
+      if ((t.startsWith('{') || t.startsWith('[')) && t.length > 2) {
+        try { walk(JSON.parse(t), depth + 1); } catch { /* ignore */ }
+      }
+      return;
+    }
+    if (Array.isArray(node)) {
+      consider(node);
+      node.slice(0, 8).forEach((item) => {
+        if (item && typeof item === 'object') walk(item, depth + 1);
+      });
+      return;
+    }
+    if (typeof node !== 'object') return;
+    for (const key of [
+      'messages', 'payload', 'thread', 'chats', 'history', 'data', 'items',
+      'records', 'result', 'inbox', 'chat', 'conversation', 'content',
+    ]) {
+      if (node[key] != null) walk(node[key], depth + 1);
+    }
+  }
+  if (Array.isArray(out)) consider(out);
+  else walk(out, 0);
+
+  let best = [];
+  let bestScore = -999;
+  for (const list of candidates) {
+    const s = scoreMessageArray(list);
+    if (s > bestScore) {
+      bestScore = s;
+      best = list;
+    }
+  }
+  const withBody = best.filter((item) => {
+    if (typeof item === 'string') return Boolean(item.trim());
+    if (!item || typeof item !== 'object') return false;
+    const kind = String(item.type || item.message_type || item.msg_type || '').toLowerCase();
+    if (['status', 'ack', 'receipt'].includes(kind) && !pickText(item) && !pickMedia(item)) return false;
+    return true;
+  });
+  return withBody.length ? withBody : best;
 }
 
 function formatWhen(raw) {
@@ -155,22 +291,26 @@ export default function WhatsAppChat({ lead, open, onClose }) {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const endRef = useRef(null);
+  const inFlight = useRef(false);
+  const backoffUntil = useRef(0);
 
   overlayOpen = Boolean(open);
   overlayCloser = open ? onClose : null;
 
-  async function load() {
-    const leadPhone = lead?.phone || '';
+  async function load(silent, force) {
+    const leadPhone = chatPhone(lead?.phone);
     if (!leadPhone) {
       setError('No phone');
       return;
     }
-    setLoading(true);
+    if (inFlight.current) return;
+    if (!force && Date.now() < backoffUntil.current) return;
+    inFlight.current = true;
+    if (!silent) setLoading(true);
     try {
       const out = await api.whatsappThread(leadPhone);
       if (out?.error === 'whatsapp_disabled') {
         setError('WhatsApp Business API CRM mein configure nahi hai');
-        setMessages([]);
         return;
       }
       const err = out?.error || '';
@@ -180,21 +320,48 @@ export default function WhatsAppChat({ lead, open, onClose }) {
       } else {
         setError('');
       }
-      setPhone(out?.phone || lead.phone || '');
-      setMessages(extractMessageList(out).map(normalizeMessage));
+      setPhone(out?.phone || leadPhone);
+      const list = extractMessageList(out).map(normalizeMessage);
+      const seen = new Set();
+      setMessages(list.map((m, i) => {
+        let id = String(m.id || `msg-${i}`);
+        if (seen.has(id)) id = `${id}-${i}`;
+        seen.add(id);
+        return { ...m, id };
+      }));
     } catch (e) {
+      if (e.status === 429 || /too many requests/i.test(e.message || '')) {
+        backoffUntil.current = Date.now() + 45_000;
+        setError('Server busy. Thodi der baad Retry dabao.');
+        return;
+      }
       const msg = e.message || 'Chat load fail';
       setError(/not found/i.test(msg) ? '' : msg);
     } finally {
+      inFlight.current = false;
       setLoading(false);
     }
   }
 
   useEffect(() => {
     if (!open) return undefined;
-    load();
-    const t = setInterval(load, 8000);
-    return () => clearInterval(t);
+    let cancelled = false;
+    let timer;
+    backoffUntil.current = 0;
+    async function tick(first) {
+      if (cancelled) return;
+      await load(!first);
+      if (cancelled) return;
+      const wait = Date.now() < backoffUntil.current
+        ? Math.max(5000, backoffUntil.current - Date.now())
+        : 25000;
+      timer = setTimeout(() => tick(false), wait);
+    }
+    tick(true);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, lead?.phone]);
 
@@ -214,18 +381,18 @@ export default function WhatsAppChat({ lead, open, onClose }) {
       { id: `local-${Date.now()}`, direction: 'outbound', text: body, status: 'sending', created_at: new Date().toISOString() },
     ]);
     try {
-      const out = await api.whatsappChat({ phone: lead.phone, text: body });
+      const out = await api.whatsappChat({ phone: chatPhone(lead.phone) || lead.phone, text: body });
       if (out?.ok === false) {
         setError(out.error === 'whatsapp_disabled'
           ? 'WhatsApp Business API CRM mein configure nahi hai'
           : (out.error || 'Send fail'));
-        await load();
-        return;
-      }
-      await load();
-    } catch (err) {
-      setError(err.message || 'Send fail');
-      await load();
+          await load(false, true);
+          return;
+        }
+        await load(false, true);
+      } catch (err) {
+        setError(err.message || 'Send fail');
+        await load(false, true);
     } finally {
       setBusy(false);
     }
@@ -252,14 +419,22 @@ export default function WhatsAppChat({ lead, open, onClose }) {
             {m.media_url && /\.(jpe?g|png|gif|webp)(\?|$)/i.test(m.media_url) ? (
               <img className="wa-media" src={m.media_url} alt="" />
             ) : null}
-            {m.text ? <p>{m.text}</p> : null}
-            {!m.text ? <p>{m.media_url ? 'Attachment' : '(media)'}</p> : null}
-            <span>{formatWhen(m.created_at)}{m.status ? ` · ${m.status}` : ''}</span>
+            {m.text || m.media_url ? (
+              <span className="wa-text">{m.text || 'Attachment'}</span>
+            ) : null}
+            <span className="wa-meta">
+              {formatWhen(m.created_at)}{m.status ? ` · ${m.status}` : ''}
+            </span>
           </div>
         ))}
         <div ref={endRef} />
       </div>
-      {error ? <div className="wa-err">{error}</div> : null}
+      {error ? (
+        <div className="wa-err">
+          {error}
+          <button type="button" className="mini" onClick={() => load(false, true)}>Retry</button>
+        </div>
+      ) : null}
       <form className="wa-compose" onSubmit={send}>
         <input
           value={text}
