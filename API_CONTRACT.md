@@ -45,6 +45,19 @@ any backend schema change:
 
 The CRM web frontend can read this same field to show GPS + notes + photo count per stage.
 
+## Remote PV design (additive — field + CRM)
+
+New endpoints. Existing `/crm/leads*` shapes are unchanged.
+
+| Endpoint | Used for | Notes |
+|---|---|---|
+| `GET /crm/designs?lead_id=` | Load design for a site | Newest first |
+| `POST /crm/designs` | Create if missing | body `{lead_id, name, address, annual_bill_kwh, location}` |
+| `PUT /crm/designs/{id}` | Save GPS + roof rectangle | |
+| `POST /crm/designs/{id}/simulate` | Field layout + kWh / payback | Returns `{design, result}` |
+
+Field app sends a single roof from length × width around the GPS pin. Desktop CRM studio can replace that with traced satellite polygons.
+
 ## Versioning
 
 No formal API version header yet (single backend, single app). If that
