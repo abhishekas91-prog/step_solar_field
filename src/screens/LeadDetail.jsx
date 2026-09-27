@@ -95,6 +95,9 @@ export default function LeadDetail({ leads, reload }) {
           <button type="button" className={tab === 'docs' ? 'active' : ''} onClick={() => setTab('docs')}>
             Documents
           </button>
+          <button type="button" className={tab === 'design' ? 'active' : ''} onClick={() => setTab('design')}>
+            PV Design
+          </button>
         </div>
 
         {tab === 'pipeline' && (
@@ -135,6 +138,16 @@ export default function LeadDetail({ leads, reload }) {
               );
             })}
           </>
+        )}
+
+        {tab === 'design' && (
+          <div className="contact-card">
+            <h2>Remote PV layout</h2>
+            <p>GPS pin, roof length/width, tilt, shade — then auto module fill + kWh/payback.</p>
+            <button className="update-btn" type="button" onClick={() => navigate(`/leads/${lead.id}/design`)}>
+              Open design survey
+            </button>
+          </div>
         )}
 
         {tab === 'docs' && (

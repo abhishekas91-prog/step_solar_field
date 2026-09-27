@@ -119,6 +119,7 @@ export default function Dashboard({ leads }) {
             <p style={{ color: '#64748b', fontSize: 13 }}>{user?.full_name} · {user?.role}</p>
             <button type="button" onClick={() => { setMenu(false); navigate('/leads?all=1'); }}>All projects</button>
             <button type="button" onClick={() => { setMenu(false); navigate('/leads/new'); }}>New lead</button>
+            <button type="button" onClick={() => { setMenu(false); navigate('/leads?all=1'); }}>Open a project for PV design</button>
             <button type="button" onClick={() => { logout(); navigate('/login'); }}>Sign out</button>
           </div>
         </div>

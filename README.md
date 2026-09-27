@@ -38,6 +38,7 @@ VITE_API_TARGET=http://localhost:8000 npm run dev
 - Advance a stage (Pending → In Progress → Completed) — only stages owned by your role
 - Save field notes, pin GPS, upload a proof photo on the stage you own
 - Capture a new lead from site (`source = Field Agent`)
+- Open **PV Design** on a project: pin GPS, enter roof length/width/tilt, run auto layout + yearly kWh / payback (same engine as CRM studio)
 
 ## Not in this repo
 

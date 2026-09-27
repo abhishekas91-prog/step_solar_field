@@ -8,6 +8,7 @@ import LeadList from './screens/LeadList';
 import LeadDetail from './screens/LeadDetail';
 import NewLead from './screens/NewLead';
 import StageUpdate from './screens/StageUpdate';
+import DesignSurvey from './screens/DesignSurvey';
 import BackButtonHandler from './lib/useBackButton';
 import { requestLaunchPermissions } from './lib/permissions';
 
@@ -52,6 +53,7 @@ function Shell() {
         <Route path="/leads" element={<LeadList leads={leads} />} />
         <Route path="/leads/new" element={<NewLead reload={reload} />} />
         <Route path="/leads/:id/stages/:stageKey" element={<StageUpdate leads={leads} reload={reload} />} />
+        <Route path="/leads/:id/design" element={<DesignSurvey leads={leads} />} />
         <Route path="/leads/:id" element={<LeadDetail leads={leads} reload={reload} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

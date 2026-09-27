@@ -97,6 +97,10 @@ export const api = {
     request(`/crm/leads/${id}/invoice/payments`, { method: 'POST', body: data }),
   comments: (id, text) => request(`/crm/leads/${id}/comments`, { method: 'POST', body: { text } }),
   saveSurvey: (id, data) => request(`/crm/leads/${id}/survey`, { method: 'POST', body: data }),
+  designs: (leadId) => request(leadId ? `/crm/designs?lead_id=${encodeURIComponent(leadId)}` : '/crm/designs'),
+  createDesign: (data) => request('/crm/designs', { method: 'POST', body: data }),
+  saveDesign: (id, data) => request(`/crm/designs/${id}`, { method: 'PUT', body: data }),
+  simulateDesign: (id, data) => request(`/crm/designs/${id}/simulate`, { method: 'POST', body: data || {} }),
   uploadDoc: (id, stageKey, file) => {
     const fd = new FormData();
     fd.append('file', file);
