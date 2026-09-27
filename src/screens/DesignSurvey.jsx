@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Icon } from '../lib/icons';
 import BrandMark from '../components/BrandMark';
+import Solar3DView from '../components/Solar3DView';
 import { goAppBack } from '../lib/useBackButton';
 import { api } from '../lib/api';
+import { loadLogoDataUri } from '../lib/documents';
+import { DESIGN_PRINT_CSS, renderDesignProposalHtml } from '../lib/designProposal';
 
 function metersOffset(lat, lng, northM, eastM) {
   const dLat = northM / 111320;
@@ -31,6 +34,8 @@ export default function DesignSurvey({ leads }) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const viewRef = useRef(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [form, setForm] = useState({
     length_m: 12,
     width_m: 8,
@@ -134,9 +139,39 @@ export default function DesignSurvey({ leads }) {
     }
   }
 
+  async function savePdf() {
+    if (!result) return;
+    setPdfBusy(true);
+    setError('');
+    try {
+      await loadLogoDataUri();
+      const viewImage = viewRef.current?.snapshot?.() || '';
+      const html = await renderDesignProposalHtml({ lead, design, form, result, viewImage });
+      const { presentPdf } = await import('../lib/pdf');
+      const name = String(lead?.full_name || 'site').replace(/[^\w.-]+/g, '_');
+      presentPdf({
+        html,
+        filename: `StepSolar-PVDesign-${name}.pdf`,
+        lead,
+        docType: 'pv-design',
+        docNo: design?.id || 'design',
+        css: DESIGN_PRINT_CSS,
+        autoSave: true,
+      });
+    } catch (e) {
+      setError(e.message || 'PDF nahi bani');
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
   const sys = result?.system;
   const prod = result?.production;
   const fin = result?.financials;
+  const panel = result?.panel;
+  const inv = result?.inverter;
+  const losses = result?.losses;
+  const bom = result?.bom;
 
   return (
     <div className="app-shell teal">
@@ -195,13 +230,45 @@ export default function DesignSurvey({ leads }) {
         </button>
 
         {sys && (
-          <div className="contact-card" style={{ marginTop: 16 }}>
-            <h2>{sys.dc_kw} kWp</h2>
-            <p>{sys.panel_count} modules · {sys.coverage_pct}% coverage</p>
-            {prod && <p>{prod.year1_kwh} kWh/yr · {prod.specific_yield} kWh/kWp</p>}
-            {fin && <p>Payback {fin.payback_years ?? '—'} yr · CAPEX {inr(fin.capex)}</p>}
-            {prod && <p>CO₂ {prod.co2_tons_year} t/yr</p>}
-          </div>
+          <>
+            <div className="section-label">3D SOLAR VIEW</div>
+            <Solar3DView ref={viewRef} form={form} result={result} playing />
+
+            <div className="contact-card" style={{ marginTop: 16 }}>
+              <h2>{sys.dc_kw} kWp</h2>
+              <p>{sys.panel_count} modules · {sys.coverage_pct}% coverage · {sys.ac_kw} kW AC</p>
+              {panel && <p>{panel.brand} {panel.model} · {panel.watt} W</p>}
+              {inv && <p>{inv.brand} {inv.model} × {inv.count || 1}</p>}
+              {prod && <p>{prod.year1_kwh} kWh/yr · {prod.specific_yield} kWh/kWp · PR {losses?.pr}%</p>}
+              {fin && <p>Payback {fin.payback_years ?? '—'} yr · CAPEX {inr(fin.capex)}</p>}
+              {fin && <p>Net {inr(fin.net_capex)} · Y1 save {inr(fin.savings_y1)}</p>}
+              {prod && <p>CO₂ {prod.co2_tons_year} t/yr · {prod.trees_equiv} trees</p>}
+            </div>
+
+            {prod?.months && (
+              <div className="contact-card" style={{ marginTop: 12 }}>
+                <h3 style={{ fontSize: 14, marginBottom: 8 }}>Monthly kWh</h3>
+                <div className="month-grid">
+                  {prod.months.map((m, i) => (
+                    <div key={m} className="month-cell"><span>{m}</span><em>{prod.monthly_kwh?.[i] ?? '—'}</em></div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {bom?.items && (
+              <div className="contact-card" style={{ marginTop: 12 }}>
+                <h3 style={{ fontSize: 14, marginBottom: 8 }}>Bill of materials</h3>
+                {bom.items.slice(0, 8).map((it) => (
+                  <p key={it.sku} className="muted" style={{ fontSize: 12 }}>{it.category}: {it.qty} {it.unit} · {inr(it.total)}</p>
+                ))}
+              </div>
+            )}
+
+            <button className="update-btn" type="button" disabled={pdfBusy} onClick={savePdf}>
+              {pdfBusy ? 'Making PDF…' : 'Save detailed PDF'}
+            </button>
+          </>
         )}
       </div>
     </div>
