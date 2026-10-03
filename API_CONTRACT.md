@@ -55,8 +55,12 @@ New endpoints. Existing `/crm/leads*` shapes are unchanged.
 | `POST /crm/designs` | Create if missing | body `{lead_id, name, address, annual_bill_kwh, location}` |
 | `PUT /crm/designs/{id}` | Save GPS + roof rectangle | |
 | `POST /crm/designs/{id}/simulate` | Field layout + kWh / payback | Returns `{design, result}` |
+| `POST /crm/designs/{id}/generate` | CRM annual generation | CRM-only. Returns `{design, generation}`. Alias `POST /api/design/designs/{id}/generate`. |
+| `POST /crm/designs/{id}/irradiance` | CRM solar-access heatmap | CRM-only. Google Solar + 14-day cache; shadow fallback 0.7–1.0. |
 
 Field app sends a single roof from length × width around the GPS pin. Desktop CRM studio can replace that with traced satellite polygons.
+
+CRM-only (field app does not call these): `/crm/solar-projects*` tariff, consumption, nested `designs`, `defaults-profiles`, `/crm/designs/{id}/generate`, `/crm/designs/{id}/irradiance`, `/crm/designs/{id}/proposal*`, `/crm/subsidy-settings`, `/crm/pricing-templates`. Public (no auth): `GET /api/public/proposal/{token}`. Existing `/crm/designs` + `/crm/leads*` shapes above are unchanged.
 
 ## Versioning
 

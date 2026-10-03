@@ -33,15 +33,10 @@ function concatBytes(parts) {
   return out;
 }
 
-function jpegToPdf(jpeg, imgW, imgH) {
+function jpegsToPdf(pages) {
   const pageW = 595.28;
   const pageH = 841.89;
-  const margin = 18;
-  const fit = Math.min((pageW - margin * 2) / imgW, (pageH - margin * 2) / imgH);
-  const w = imgW * fit;
-  const h = imgH * fit;
-  const x = (pageW - w) / 2;
-  const y = (pageH - h) / 2;
+  const margin = 16;
   const enc = new TextEncoder();
   const chunks = [];
   let offset = 0;
@@ -51,36 +46,77 @@ function jpegToPdf(jpeg, imgW, imgH) {
     chunks.push(bytes);
     offset += bytes.length;
   }
+  const n = pages.length;
+  const kids = pages.map((_, i) => `${3 + i * 3} 0 R`).join(' ');
   add('%PDF-1.4\n');
   offsets[1] = offset;
   add('1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n');
   offsets[2] = offset;
-  add('2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n');
-  offsets[3] = offset;
-  add(`3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >> endobj\n`);
-  offsets[4] = offset;
-  add(`4 0 obj << /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >> stream\n`);
-  add(jpeg);
-  add('\nendstream\nendobj\n');
-  offsets[5] = offset;
-  const content = `q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /Im0 Do Q`;
-  add(`5 0 obj << /Length ${content.length} >> stream\n${content}\nendstream\nendobj\n`);
+  add(`2 0 obj << /Type /Pages /Kids [${kids}] /Count ${n} >> endobj\n`);
+  pages.forEach((pg, i) => {
+    const pageObj = 3 + i * 3;
+    const imgObj = 4 + i * 3;
+    const contentObj = 5 + i * 3;
+    const fit = Math.min((pageW - margin * 2) / pg.w, (pageH - margin * 2) / pg.h);
+    const w = pg.w * fit;
+    const h = pg.h * fit;
+    const x = (pageW - w) / 2;
+    const y = pageH - margin - h;
+    offsets[pageObj] = offset;
+    add(`${pageObj} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 ${imgObj} 0 R >> >> /Contents ${contentObj} 0 R >> endobj\n`);
+    offsets[imgObj] = offset;
+    add(`${imgObj} 0 obj << /Type /XObject /Subtype /Image /Width ${pg.w} /Height ${pg.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${pg.jpeg.length} >> stream\n`);
+    add(pg.jpeg);
+    add('\nendstream\nendobj\n');
+    offsets[contentObj] = offset;
+    const content = `q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /Im0 Do Q`;
+    add(`${contentObj} 0 obj << /Length ${content.length} >> stream\n${content}\nendstream\nendobj\n`);
+  });
+  const last = 2 + n * 3;
   const xref = offset;
-  add('xref\n0 6\n0000000000 65535 f \n');
-  for (let i = 1; i <= 5; i += 1) {
+  add(`xref\n0 ${last + 1}\n0000000000 65535 f \n`);
+  for (let i = 1; i <= last; i += 1) {
     add(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
   }
-  add(`trailer << /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  add(`trailer << /Size ${last + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
   return concatBytes(chunks);
 }
 
-async function canvasToJpeg(canvas) {
+async function canvasToJpegBytes(canvas) {
   const blob = await new Promise((resolve) => {
     canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92);
   });
   if (!blob) throw new Error('PDF image nahi bani');
-  const buf = new Uint8Array(await blob.arrayBuffer());
-  return jpegToPdf(buf, canvas.width, canvas.height);
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+function sliceCanvasPages(canvas) {
+  const ratio = 841.89 / 595.28;
+  const pageH = Math.round(canvas.width * ratio);
+  const pages = [];
+  let y = 0;
+  while (y < canvas.height) {
+    const h = Math.min(pageH, canvas.height - y);
+    const page = document.createElement('canvas');
+    page.width = canvas.width;
+    page.height = h;
+    const ctx = page.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, page.width, page.height);
+    ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+    pages.push(page);
+    y += pageH;
+  }
+  return pages;
+}
+
+async function canvasToJpeg(canvas) {
+  const slices = sliceCanvasPages(canvas);
+  const pages = [];
+  for (const s of slices) {
+    pages.push({ jpeg: await canvasToJpegBytes(s), w: s.width, h: s.height });
+  }
+  return jpegsToPdf(pages);
 }
 
 export function pdfFilename(record) {
@@ -152,7 +188,7 @@ export async function sendDocWhatsApp(lead, { docType, docNo, message } = {}) {
   });
 }
 
-export function presentPdf({ html, filename, lead, docType, docNo, onStatus }) {
+export function presentPdf({ html, filename, lead, docType, docNo, onStatus, css, autoSave = true }) {
   closePdfOverlay();
   const root = document.createElement('div');
   root.className = 'pdf-sheet';
@@ -165,7 +201,7 @@ export function presentPdf({ html, filename, lead, docType, docNo, onStatus }) {
     </div>
     <div class="pdf-status" hidden></div>
     <div class="pdf-scroll">
-      <style>${DOC_PRINT_CSS}</style>
+      <style>${css || DOC_PRINT_CSS}</style>
       <div class="docwrap"><div class="doc2">${html}</div></div>
     </div>
   `;
@@ -225,9 +261,11 @@ export function presentPdf({ html, filename, lead, docType, docNo, onStatus }) {
     if (act === 'wa') sendWa();
   });
 
-  setTimeout(() => {
-    save();
-  }, 80);
+  if (autoSave) {
+    setTimeout(() => {
+      save();
+    }, 80);
+  }
 
   return { close, save, sendWa };
 }
