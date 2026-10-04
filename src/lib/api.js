@@ -101,9 +101,9 @@ export const api = {
   createDesign: (data) => request('/crm/designs', { method: 'POST', body: data }),
   saveDesign: (id, data) => request(`/crm/designs/${id}`, { method: 'PUT', body: data }),
   simulateDesign: (id, data) => request(`/crm/designs/${id}/simulate`, { method: 'POST', body: data || {} }),
-  uploadDoc: (id, stageKey, file) => {
+  uploadDoc: (id, stageKey, file, filename) => {
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('file', file, filename || file.name || 'document.pdf');
     return request(`/crm/leads/${id}/stages/${stageKey}/documents`, { method: 'POST', formData: fd });
   },
   docPath: (id, stageKey, docId) =>

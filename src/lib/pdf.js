@@ -177,7 +177,16 @@ async function captureOverlayPdf(root) {
   return canvasToJpeg(canvas);
 }
 
-export async function sendDocWhatsApp(lead, { docType, docNo, message } = {}) {
+function pickUploadStage(lead) {
+  const stages = lead?.stages || [];
+  const prefer = ['quotation_sent', 'survey_completed', 'vendor', 'feas'];
+  for (const key of prefer) {
+    if (stages.some((s) => s.key === key)) return key;
+  }
+  return stages[0]?.key || 'quotation_sent';
+}
+
+export async function sendDocWhatsApp(lead, { docType, docNo, message, docId } = {}) {
   if (!lead?.id) throw new Error('Lead nahi mili');
   const phone = String(lead.phone || '').replace(/\D/g, '');
   if (phone.length < 10) throw new Error('Customer ka valid phone nahi hai');
@@ -185,6 +194,7 @@ export async function sendDocWhatsApp(lead, { docType, docNo, message } = {}) {
     document_type: docType || 'document',
     document_no: docNo || '',
     message: message || undefined,
+    doc_id: docId || undefined,
   });
 }
 
@@ -243,12 +253,21 @@ export function presentPdf({ html, filename, lead, docType, docNo, onStatus, css
   async function sendWa() {
     status('WhatsApp se bhej rahe hain…');
     try {
-      const out = await sendDocWhatsApp(lead, { docType, docNo });
+      let docId;
+      try {
+        const bytes = await captureOverlayPdf(root);
+        const file = new Blob([bytes], { type: 'application/pdf' });
+        const uploaded = await api.uploadDoc(lead.id, pickUploadStage(lead), file, filename);
+        docId = uploaded?.id;
+      } catch (_) {
+        /* backend generates PDF if upload is unavailable */
+      }
+      const out = await sendDocWhatsApp(lead, { docType, docNo, docId });
       if (out?.ok === false && out?.error === 'whatsapp_disabled') {
         throw new Error('WhatsApp Business API CRM mein configure nahi hai');
       }
       if (out?.ok === false) throw new Error(out?.error || 'WhatsApp send fail');
-      status('WhatsApp Business API se bhej diya');
+      status(docId ? 'WhatsApp par PDF bhej diya' : 'WhatsApp Business API se bhej diya');
     } catch (e) {
       status(e.message || 'WhatsApp send fail', true);
     }
