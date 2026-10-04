@@ -27,7 +27,7 @@ Base URL: `https://stepsolar-backend.onrender.com/api`
 | `PATCH /crm/leads/{id}` | Stage status/notes/location update | body `{stages: [...]}` — **must send the full stages array**, only the target stage's fields changed, same order/keys as received. Role-based: non-Admin can only change stages where `stage.owner === my role`. |
 | `POST /crm/leads/{id}/comments` | Field comment | body `{text}` |
 | `POST /crm/leads/{id}/stages/{stage_key}/documents` | Proof photo upload | multipart `file` field. |
-| `POST /crm/leads/{id}/whatsapp/document` | Send quotation/invoice/receipt via WaCRM | body `{document_type, document_no?, message?}`. Returns `{ok, status, log_id, error}`. `error=whatsapp_disabled` until Admin pastes a `wacrm_live_` key. |
+| `POST /crm/leads/{id}/whatsapp/document` | Send quotation/invoice/receipt/pv-design via WaCRM | body `{document_type, document_no?, message?, doc_id?}`. Optional `doc_id` uses an uploaded file. `pv-design`/`design` generates PDF from that design id or the lead's latest simulated design. Returns `{ok, status, channel, filename}`. |
 | `GET /crm/whatsapp/chat?phone=` | Live WaCRM inbox for field chat overlay | Bearer JWT. Query `phone` (8–20 chars). Returns `{ok, enabled, phone, conversation_id, contact_id, messages[], error}`. |
 | `POST /crm/whatsapp/chat` | Send free-form WhatsApp text via WaCRM | body `{phone, text}`. Returns `{ok, conversation_id, message_id, error}`. Same thread as the CRM popup. |
 
